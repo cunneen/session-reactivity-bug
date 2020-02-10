@@ -18,22 +18,19 @@ const initialize = function () {
   const buggyBehaviour = Session.get("buggyBehaviour");
   console.log(`EXHIBIT_BUGGY_BEHAVIOUR IS SET TO ${buggyBehaviour}`);
 
-  Session.setDefault("document", { arrayItems: [] });
-  ItemsColl.remove({}, function (err) { // remove all
-    if (err) {
-      console.error(err);
-    } else {
-      const objToInsert = { foo: "bar", arrayItems: [{ key: "a" }, { key: "b" }, { key: "c" }] };
-      ItemsColl.insert(objToInsert,
-        function (error, newID) {
-          if (buggyBehaviour) { // use session for reactivity rather than using collection directly
-            objToInsert._id = newID;
-            Session.set("document", objToInsert);
-          }
-        });
-    }
+  const objToInsert = { foo: "bar", arrayItems: [{ key: "a" }, { key: "b" }, { key: "c" }] };
 
-  });
+  if (buggyBehaviour) {
+    Session.setDefault("document", objToInsert);
+  } else {
+    ItemsColl.remove({}, function (err) { // remove all
+      if (err) {
+        console.error(err);
+      } else { // like the highlander, there can be only one. Probably Sean Connery.
+        ItemsColl.insert(objToInsert);
+      }  
+    });
+  }
 }
 
 // ==== sortablejs
@@ -49,27 +46,41 @@ const setupSortable = function (elem) {
 
     // Element dragging ended; update the collection (and possibly the session var)
     onEnd: function (/**Event*/evt) {
-      const document = ItemsColl.findOne(evt.from.getAttribute("data-item-id"));
+      let document;
+      if (Session.get("buggyBehaviour")) {
+        document = Session.get("document");
+      } else { // from local collection
+        document = ItemsColl.findOne(evt.from.getAttribute("data-item-id"));
+      }
       const arrayItems = document.arrayItems;
-      const id = document._id;
+      const id = document._id; // will be undefined for Session variant
 
       const element = arrayItems[evt.oldIndex];
       arrayItems.splice(evt.oldIndex, 1); // remove 1 thing from items, starting at index oldIndex (i.e. just remove it)
       arrayItems.splice(evt.newIndex, 0, element); // remove 0 things from items, then starting at newIndex insert element.
-      ItemsColl.update({ "_id": id }, { "$unset": { arrayItems: 1 } }
-        , function (error, numUpdated) {
-          if (numUpdated) {
-            ItemsColl.update({ "_id": id }, { "$set": { arrayItems: arrayItems } },
-              function (error2, numUpdated2) {
-                if (Session.get("buggyBehaviour")) { // use the Session var for reactivity
-                  if (numUpdated2) {
-                    Session.set("document", ItemsColl.findOne(id))
-                  }
-                }
-              });
+
+      if (Session.get("buggyBehaviour")) { // update doc on session
+        // first set the Session document to an object WITHOUT the array -- why do we even have to do this?
+        const docCloneWithoutArrayItems = JSON.parse(JSON.stringify(document));
+        delete docCloneWithoutArrayItems.arrayItems;
+        Session.set("document", docCloneWithoutArrayItems);
+        
+        // now set the Session document to an object WITH the updated array
+        // This works -- ONE MILLISECOND!!! :
+        // setTimeout(function() {Session.set("document", document);}, 1);
+        // This doesn't work
+        Session.set("document", document);
+      } else { // update doc in local collection
+        // first update the local collection doc to be WITHOUT the array -- why do we even have to do this?
+        ItemsColl.update({ "_id": id }, { "$unset": { arrayItems: 1 } }
+          , function (error, numUpdated) {
+            if (numUpdated) {
+              // then add the array items back again.
+              ItemsColl.update({ "_id": id }, { "$set": { arrayItems: arrayItems } });
+            }
           }
-        }
-      );
+        );
+      }
     }
   });
 }
