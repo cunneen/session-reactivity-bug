@@ -1,0 +1,16 @@
+{
+  "name": "meteor-sort-bug",
+  "private": true,
+  "scripts": {
+    "start": "meteor run"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.7.6",
+    "@fortawesome/fontawesome-svg-core": "^1.2.27",
+    "@fortawesome/free-solid-svg-icons": "^5.12.1",
+    "bootstrap": "^3.4.1",
+    "jquery": "^3.4.1",
+    "meteor-node-stubs": "^1.0.0",
+    "sortablejs": "^1.10.2"
+  }
+}

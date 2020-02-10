@@ -1,0 +1,19 @@
+.sortable-item {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.sortable-item:hover {
+  background-color: #ff9;
+  cursor: move;
+	cursor: -webkit-grabbing;
+}
+
+ul li {
+  list-style-type: none;
+  padding: 0.5em;
+  border: 1px solid #ddd;
+  border-collapse: collapse;
+}

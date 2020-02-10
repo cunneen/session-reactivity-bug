@@ -1,0 +1,34 @@
+<template name="array">
+  <div class="container">
+    <div class="col-sm-offset-2 col-sm-10">
+      <div class="form-group">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" id="exhibit-buggy-behaviour" checked="{{isBuggySelected}}">
+            Exhibit buggy behaviour (using Session)
+          </label>
+        </div>
+
+        {{#with dataItem}}
+          {{> arraySortable}}
+          <ul>
+            Actual arrayItems order (should be identical):
+            {{#each arrayItems}}
+              <li>{{key}}</li>
+            {{/each}}
+          </ul>
+        {{/with}}
+      </div>
+    </div>
+  </div>
+
+</template>
+
+<template name="arraySortable">
+  <ul class="sortable" data-item-id="{{_id}}">
+    SortableJS items order (try dragging):
+    {{#each arrayItems}}
+      <li class="field-options sortable-item" data-option-id="{{key}}">{{key}}</li>
+    {{/each}}
+  </ul>
+</template>
